@@ -10,7 +10,7 @@ public class PlayerHealth : MonoBehaviour
     private void Awake()
     {
         currentHealth = maxHealth;
-        Debug.Log($"[Player] Health initialized: {currentHealth}");
+        //Debug.Log($"[Player] Health initialized: {currentHealth}");
     }
 
     public void TakeDamage(float amount)
@@ -25,7 +25,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void Die()
     {
-        Debug.Log("[Player] Died");
+        //Debug.Log("[Player] Died");
         // aquí luego:
         // - animación
         // - restart

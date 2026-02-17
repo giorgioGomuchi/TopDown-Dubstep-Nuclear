@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6093966679401938742}
   - component: {fileID: 6701733122605416424}
   - component: {fileID: 5546272919044456307}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: pala_cetro
   m_TagString: Untagged
   m_Icon: {fileID: 0}

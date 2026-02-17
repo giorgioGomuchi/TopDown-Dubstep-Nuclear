@@ -39,65 +39,20 @@ public class MeleeHitController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!initialized) return;
-        if (((1 << other.gameObject.layer) & targetLayer) == 0) return;
-
         var projectile = other.GetComponent<EnemyProjectile>();
         if (projectile != null)
         {
-
-            /*
             Vector2 incoming = projectile.CurrentDirection;
-            Vector2 normal = ((Vector2)other.transform.position - (Vector2)transform.position).normalized;
-
-            Vector2 reflectDir = Vector2.Reflect(incoming, normal);
-           
-            
-            Vector2 incoming = projectile.CurrentDirection;
-
-           
-            Vector2 center = (Vector2)transform.position; // centro del melee
-            Vector2 hitPoint = other.ClosestPoint(center);
-
-            Vector2 normal = ((Vector2)hitPoint - center).normalized;
-
-            Vector2 reflectDir = Vector2.Reflect(incoming, normal);
-
-            // Forward del arma (eje +X local del hit)
             Vector2 forward = transform.right;
 
-            float dot = Vector2.Dot(forward, incoming);
-
-
-
-            //Vector2 reflectDir = -projectile.CurrentDirection;
-
-            //Vector2 reflectDir = -incoming;
-            if (dot < 0f) // solo reflejar si viene de frente
-            {
-                projectile.Reflect(reflectDir);
-            }
-             */
-
-            Vector2 incoming = projectile.CurrentDirection;
-
-            // Dirección hacia delante del arma
-            Vector2 forward = transform.right;
-
-            // Solo permitir reflect si la bala viene de frente
             float dot = Vector2.Dot(incoming, -forward);
 
-            if (dot > 0.5f) // viene suficientemente de frente
+            if (dot > 0.5f)
             {
                 projectile.Reflect(forward);
             }
 
-            //projectile.Reflect(-projectile.CurrentDirection);
-            //projectile.Reflect(reflectDir);
-
-            //Debug.Break();
-
-            return;
+            return; // no seguimos evaluando como enemigo
         }
 
         // daño
@@ -106,6 +61,10 @@ public class MeleeHitController : MonoBehaviour
         {
             damageable.TakeDamage(damage);
         }
+
+        Debug.Log($"[Collider2D other] Collider2D {other} damageable={damageable}", this);
+
+
 
         // ✅ knockback: lo buscamos en el EnemyHealth (o un componente que lo implemente)
         var enemyHealth = other.GetComponentInParent<EnemyHealth>();

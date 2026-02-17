@@ -13,12 +13,12 @@ TagManager:
   - UI
   - Player
   - Enemy
-  - Desturctible
-  - Ground
-  - Background
-  - Entities
-  - VFX
-  - Projectile
+  - PlayerMelee
+  - 'EnemyProjectile '
+  - 
+  - 
+  - 
+  - 
   - 
   - 
   - 
@@ -40,22 +40,4 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
-    locked: 0
-  - name: Ground
-    uniqueID: 697558737
-    locked: 0
-  - name: Background
-    uniqueID: 362334497
-    locked: 0
-  - name: Entities
-    uniqueID: 289602287
-    locked: 0
-  - name: Player
-    uniqueID: 281633025
-    locked: 0
-  - name: Enemy
-    uniqueID: 608021299
-    locked: 0
-  - name: Effects
-    uniqueID: 3339103433
     locked: 0

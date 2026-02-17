@@ -18,7 +18,7 @@ MonoBehaviour:
   cooldown: 1
   targetLayer:
     serializedVersion: 2
-    m_Bits: 128
+    m_Bits: 0
   cameraShakeDuration: 0.1
   cameraShakeStrength: 0.15
   knockbackForce: 8

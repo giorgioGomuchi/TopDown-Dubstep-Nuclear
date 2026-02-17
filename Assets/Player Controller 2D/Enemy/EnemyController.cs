@@ -1,11 +1,8 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class EnemyController : MonoBehaviour
 {
-    public enum EnemyMode { Idle, Wander, Chase }
-
     [Header("Data")]
     public EnemyDataSO data;
 
@@ -15,50 +12,27 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private SpriteRenderer spriteRenderer;
 
     [Header("Debug")]
-    [SerializeField] private bool debugLogs = true;
-    [SerializeField] private EnemyMode currentMode;
-
-    [SerializeField] private float knockbackLockTime = 0.12f;
-    private float knockbackTimer;
-
-
+    [SerializeField] private bool debugLogs = false;
 
     [HideInInspector] public Rigidbody2D rb;
 
-    private EnemyIdleState idle;
-    private EnemyWanderState wander;
-    private EnemyChaseState meleeChase;
-    private EnemySniperShootState sniperChase;
-
+    private float knockbackTimer;
 
     private static readonly int SPEED_HASH = Animator.StringToHash("Speed");
     private static readonly int HIT_HASH = Animator.StringToHash("Hit");
     private static readonly int DIE_HASH = Animator.StringToHash("Die");
 
-    private float attackTimer;
+    private float movementLockTimer;
 
-    private float hitLockTimer;
-
-    private float knockbackLockTimer;
-
-
-    [Header("Sniper References")]
-    public Transform weaponPivot;
-    public Transform firePoint;
-    public LineRenderer lineRenderer;
-
-
+    public bool IsMovementLocked => movementLockTimer > 0f;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        // Si el enemigo vuela no queremos gravedad
         rb.gravityScale = 0f;
         rb.freezeRotation = true;
-
-        idle = GetComponent<EnemyIdleState>();
-        wander = GetComponent<EnemyWanderState>();
-        meleeChase = GetComponent<EnemyChaseState>();
-        sniperChase = GetComponent<EnemySniperShootState>();
 
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player")?.transform;
@@ -67,21 +41,8 @@ public class EnemyController : MonoBehaviour
             spriteRenderer.sprite = data.sprite;
     }
 
-    private void Start()
-    {
-        SetMode(EnemyMode.Idle);
-    }
-
     private void Update()
     {
-        attackTimer -= Time.deltaTime;
-
-        //if (hitLockTimer > 0f)
-        //{
-        //hitLockTimer -= Time.deltaTime;
-        //rb.velocity = Vector2.zero;
-        //  return;
-        //}
         if (knockbackTimer > 0f)
         {
             knockbackTimer -= Time.deltaTime;
@@ -89,74 +50,30 @@ public class EnemyController : MonoBehaviour
             if (animator != null)
                 animator.SetFloat(SPEED_HASH, rb.velocity.magnitude);
 
-            return; // ⛔ NO tocar rb.velocity aquí
+            return;
         }
 
-        switch (currentMode)
-        {
-            case EnemyMode.Idle: idle.Tick(); break;
-            case EnemyMode.Wander: wander.Tick(); break;
-            case EnemyMode.Chase:
-                if (data.attackType == EnemyAttackType.Melee)
-                    meleeChase.Tick();
-                else
-                    sniperChase.Tick();
-                break;
-        }
+        if (movementLockTimer > 0f)
+            movementLockTimer -= Time.deltaTime;
 
         if (animator != null)
             animator.SetFloat(SPEED_HASH, rb.velocity.magnitude);
     }
 
-    public void SetMode(EnemyMode mode)
-    {
-        if (currentMode == mode) return;
+    // =========================
+    // MOVEMENT
+    // =========================
 
-        currentMode = mode;
-
-        if (debugLogs && data != null)
-            //Debug.Log($"[{data.enemyName}] Mode -> {mode}", this);
-
-            switch (currentMode)
-            {
-                case EnemyMode.Idle: idle.Enter(); break;
-                case EnemyMode.Wander: wander.Enter(); break;
-                case EnemyMode.Chase:
-                    if (data.attackType == EnemyAttackType.Melee)
-                        meleeChase.Enter();
-                    else
-                        sniperChase.Enter();
-                    break;
-            }
-    }
-
-    public void TryAttack()
-    {
-        if (attackTimer > 0f || player == null)
-            return;
-
-        PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
-        if (playerHealth == null)
-            return;
-
-        playerHealth.TakeDamage(data.damage);
-        Debug.Log($"[{data.enemyName}] Hit player for {data.damage}");
-
-        attackTimer = data.attackCooldown;
-    }
-
-
-
-    // ===== Movement =====
     public void Move(Vector2 direction, float speed)
     {
+
+        if (IsMovementLocked)
+        {
+            rb.velocity = Vector2.zero;
+            return;
+        }
         rb.velocity = direction * speed;
         UpdateFacing(direction);
-    }
-
-    public void StopMovement()
-    {
-        rb.velocity = Vector2.zero;
     }
 
     public void MoveTowards(Vector2 target, float speed)
@@ -166,14 +83,23 @@ public class EnemyController : MonoBehaviour
         UpdateFacing(dir);
     }
 
+    public void StopMovement()
+    {
+        rb.velocity = Vector2.zero;
+    }
+
     private void UpdateFacing(Vector2 movement)
     {
         if (spriteRenderer == null) return;
         if (Mathf.Abs(movement.x) < 0.05f) return;
+
         spriteRenderer.flipX = movement.x < 0f;
     }
 
-    // ===== Helpers =====
+    // =========================
+    // HELPERS
+    // =========================
+
     public bool PlayerInRange(float range)
     {
         if (player == null) return false;
@@ -186,7 +112,10 @@ public class EnemyController : MonoBehaviour
         return ((Vector2)player.position - (Vector2)transform.position).normalized;
     }
 
-    // ===== Anim feedback =====
+    // =========================
+    // ANIMATION FEEDBACK
+    // =========================
+
     public void PlayHit()
     {
         if (animator == null) return;
@@ -199,65 +128,31 @@ public class EnemyController : MonoBehaviour
         animator.SetTrigger(DIE_HASH);
     }
 
-    public void DisableAIAndMovement()
-    {
-        enabled = false;
-        StopMovement();
-        if (rb != null) rb.simulated = false;
-    }
-
-    public void LockMovement(float time)
-    {
-        hitLockTimer = time;
-    }
-
+    // =========================
+    // KNOCKBACK
+    // =========================
 
     public void ApplyKnockback(Vector2 direction, float force, float duration)
     {
-        Debug.Log($"[EnemyController] Knockback applied dir={direction} force={force} lock={duration}", this);
-
         knockbackTimer = duration;
+
         rb.velocity = Vector2.zero;
         rb.AddForce(direction.normalized * force, ForceMode2D.Impulse);
     }
 
-
-    internal void OnKnockback()
+    public void LockMovement(float duration)
     {
-        knockbackTimer = knockbackLockTime;
-
+        movementLockTimer = duration;
     }
 
-    private void OnDrawGizmosSelected()
+   
+
+    public void DisableAIAndMovement()
     {
-        if (data == null) return;
+        enabled = false;
+        StopMovement();
 
-        // Chase range
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, data.chaseRange);
-
-        // Stop distance
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, data.stopDistance);
-
-        // Player line
-        if (player != null)
-        {
-            Gizmos.color = Color.white;
-            Gizmos.DrawLine(transform.position, player.position);
-        }
-
-#if UNITY_EDITOR
-        // Estado actual
-        UnityEditor.Handles.color = Color.white;
-        UnityEditor.Handles.Label(
-            transform.position + Vector3.up * 1.2f,
-            currentMode.ToString()
-        );
-#endif
+        if (rb != null)
+            rb.simulated = false;
     }
-
-
-
-
 }

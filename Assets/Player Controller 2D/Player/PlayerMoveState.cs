@@ -8,7 +8,7 @@ public class PlayerMoveState : PlayerState
 
     public override void Enter()
     {
-        Debug.Log("[Player] Enter Move");
+        //Debug.Log("[Player] Enter Move");
     }
 
     public override void Tick()

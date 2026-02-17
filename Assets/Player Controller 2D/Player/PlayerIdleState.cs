@@ -8,7 +8,7 @@ public class PlayerIdleState : PlayerState
 
     public override void Enter()
     {
-        Debug.Log("[Player] Enter Idle");
+        //Debug.Log("[Player] Enter Idle");
         // Ensure we stop motion while idle (optional but clean).
         fsm.Mover.SetVelocity(Vector2.zero);
     }

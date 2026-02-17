@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
@@ -8,12 +7,8 @@ public class Projectile : MonoBehaviour
     [SerializeField] private int damage = 1;
 
     private Vector2 direction;
-
     protected LayerMask targetLayer;
-
     private bool initialized;
-
-
 
     public void Initialize(Vector2 direction, float speed, LayerMask targetLayer)
     {
@@ -23,8 +18,9 @@ public class Projectile : MonoBehaviour
 
         initialized = true;
 
-        // Rotate projectile to face movement direction
-        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        // Si tu sprite está "vertical hacia arriba" y quieres que apunte con la punta:
+        // Usa +90/-90 según cómo esté dibujado.
+        float angle = Mathf.Atan2(this.direction.y, this.direction.x) * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0f, 0f, angle);
 
         Invoke(nameof(OnLifeTimeEnded), lifeTime);
@@ -32,20 +28,15 @@ public class Projectile : MonoBehaviour
 
     private void Update()
     {
+        if (!initialized) return;
         transform.position += (Vector3)(direction * speed * Time.deltaTime);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (!initialized) return;
 
-        Debug.Log("Trigger with: " + other.name);
-
-        if (!initialized)
-            return;
-
-        if (((1 << other.gameObject.layer) & targetLayer) == 0)
-            return;
-
+        // IMPORTANTE: impacta con cualquiera (pared/suelo/enemigo), decide OnHit qué hacer
         OnHit(other);
     }
 
@@ -54,11 +45,14 @@ public class Projectile : MonoBehaviour
         Destroy(gameObject);
     }
 
-
     protected virtual void OnHit(Collider2D other)
     {
-        Vector2 hitDirection =
-            (other.transform.position - transform.position).normalized;
+        // Solo hace daño si está en targetLayer
+        if (((1 << other.gameObject.layer) & targetLayer) == 0)
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         var damageable = other.GetComponentInParent<IDamageable>();
         if (damageable != null)
@@ -68,10 +62,4 @@ public class Projectile : MonoBehaviour
 
         Destroy(gameObject);
     }
-
-
-
-
 }
-
-

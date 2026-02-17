@@ -68,6 +68,7 @@ public class WeaponController : MonoBehaviour
     // ---------------- RANGED ----------------
     private void FireRanged(RangedWeaponDataSO data)
     {
+        //TODO OBJECT PULL CREAR MANAGER EN OTRA CLASE
         GameObject proj = Instantiate(
             data.projectilePrefab,
             firePoint.position,
