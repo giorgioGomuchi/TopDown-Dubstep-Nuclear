@@ -9,7 +9,6 @@ public class WeaponController : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private Transform firePoint;
-    [SerializeField] private TrailRenderer trail;
     [SerializeField] private Animator weaponAnimator;
 
 
@@ -52,9 +51,6 @@ public class WeaponController : MonoBehaviour
                 FireRanged(ranged);
                 break;
 
-            case MeleeTrailWeaponDataSO meleeTrail:
-                yield return MeleeTrailAttack(meleeTrail);
-                break;
 
             case MeleeAnimatedWeaponDataSO meleeAnim:
                 yield return MeleeAnimatedAttack(meleeAnim);
@@ -68,20 +64,30 @@ public class WeaponController : MonoBehaviour
     // ---------------- RANGED ----------------
     private void FireRanged(RangedWeaponDataSO data)
     {
-        //TODO OBJECT PULL CREAR MANAGER EN OTRA CLASE
         GameObject proj = Instantiate(
             data.projectilePrefab,
             firePoint.position,
             Quaternion.identity
         );
 
-        Projectile projectile = proj.GetComponent<Projectile>();
-        projectile.Initialize(aim.AimDirection, data.projectileSpeed, data.targetLayer);
+        var projectile = proj.GetComponent<KinematicProjectile2D>();
+        if (projectile == null)
+        {
+            Debug.LogError("Projectile prefab missing KinematicProjectile2D");
+            Destroy(proj);
+            return;
+        }
+
+        projectile.Initialize(
+            aim.AimDirection,
+            data.projectileSpeed,
+            data.damage,
+            data.targetLayer
+        );
 
         if (data is ExplosiveWeaponDataSO explosiveData)
         {
-            ExplosiveProjectile explosive = proj.GetComponent<ExplosiveProjectile>();
-
+            var explosive = proj.GetComponent<ExplosiveProjectile>();
             if (explosive != null)
             {
                 explosive.ConfigureExplosion(
@@ -91,43 +97,11 @@ public class WeaponController : MonoBehaviour
                     explosiveData.explosionPrefab
                 );
             }
-            else
-            {
-                Debug.LogWarning("ExplosiveWeaponData pero el prefab no tiene ExplosiveProjectile");
-            }
         }
-
-        TriggerCameraShake();
     }
 
 
-    // ---------------- MELEE TRAIL ----------------
-    private IEnumerator MeleeTrailAttack(MeleeTrailWeaponDataSO data)
-    {
-        if (trail == null)
-            yield break;
-
-        trail.Clear();
-        trail.emitting = true;
-
-        float elapsed = 0f;
-        float halfAngle = data.swingAngle * 0.5f;
-
-        while (elapsed < data.swingDuration)
-        {
-            float t = elapsed / data.swingDuration;
-            float angle = Mathf.Lerp(-halfAngle, halfAngle, t);
-
-            transform.localRotation = Quaternion.Euler(0f, 0f, angle);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        trail.emitting = false;
-        transform.localRotation = Quaternion.identity;
-
-        Debug.Log("[WeaponController] Melee trail attack");
-    }
+    
 
     // ---------------- MELEE ANIMATED ----------------
     private IEnumerator MeleeAnimatedAttack(MeleeAnimatedWeaponDataSO data)
@@ -232,11 +206,6 @@ public class WeaponController : MonoBehaviour
     {
         spriteRenderer.sprite = weaponData.weaponIcon;
 
-        if (weaponData is MeleeTrailWeaponDataSO trailWeapon && trail != null)
-        {
-            trail.startWidth = trailWeapon.trailWidth;
-            trail.emitting = false;
-        }
 
         if (weaponData is MeleeAnimatedWeaponDataSO animated && weaponAnimator != null)
         {

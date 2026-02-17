@@ -101,7 +101,13 @@ public class EnemyWeapon : MonoBehaviour
             // Tu firma actual: Initialize(Vector2 direction, float speed, LayerMask targetLayer)
             EnemyProjectile p = proj.GetComponent<EnemyProjectile>();
             if (p != null)
+            {
+                Debug.Log("---- SPAWN PROJECTILE ----");
+                Debug.Log("TargetLayer from SO: " + weaponData.targetLayer.value);
+                Debug.Log("TargetLayer name: " + LayerMask.LayerToName(Mathf.RoundToInt(Mathf.Log(weaponData.targetLayer.value, 2))));
+
                 p.Initialize(dir, ctx.speed, weaponData.damage, ctx.targetLayer);
+            }
             // --- AFTER SPAWN (modifiers) ---
             if (weaponData.modifiers != null)
             {

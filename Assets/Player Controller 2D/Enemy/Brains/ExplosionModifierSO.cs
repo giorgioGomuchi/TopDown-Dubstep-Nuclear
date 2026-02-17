@@ -11,9 +11,19 @@ public class ExplosionModifierSO : WeaponModifierSO
 
     public override void AfterSpawnedProjectile(ref WeaponFireContext ctx, GameObject projectileInstance)
     {
-        var explosive = projectileInstance.GetComponent<ExplosiveProjectile>();
+        var explosive = projectileInstance.GetComponent<EnemyExplosiveProjectile>();
+
+        Debug.Log("Modifier running on: " + projectileInstance.name);
+        Debug.Log("Explosive component found? " + (explosive != null));
+
         if (explosive == null) return;
 
         explosive.ConfigureExplosion(radius, explosionDamage, explosionForce, explosionPrefab);
+
+        Debug.Log("Configured explosion:");
+        Debug.Log("Radius: " + radius);
+        Debug.Log("Damage: " + explosionDamage);
     }
+
+
 }

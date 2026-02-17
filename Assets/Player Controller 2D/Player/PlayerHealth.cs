@@ -1,11 +1,11 @@
 using UnityEngine;
 
-public class PlayerHealth : MonoBehaviour
+public class PlayerHealth : MonoBehaviour, IDamageable
 {
     [Header("Stats")]
-    [SerializeField] private float maxHealth = 10f;
+    [SerializeField] private int maxHealth = 10;
 
-    [SerializeField] private float currentHealth;
+    [SerializeField] private int currentHealth;
 
     private void Awake()
     {
@@ -13,7 +13,7 @@ public class PlayerHealth : MonoBehaviour
         //Debug.Log($"[Player] Health initialized: {currentHealth}");
     }
 
-    public void TakeDamage(float amount)
+    public void TakeDamage(int amount)
     {
         currentHealth -= amount;
         Debug.Log($"[Player] Took {amount} damage. HP = {currentHealth}");
